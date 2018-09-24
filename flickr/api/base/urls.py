@@ -7,8 +7,8 @@ from flickr.api.base.views import FlickrGroupViewSet, FlickrPhotoViewSet
 
 router = DefaultRouter()
 
-router.register(r'flickr_groups', FlickrGroupViewSet, base_name='flickr_group')
-router.register(r'flickr_photos', FlickrPhotoViewSet, base_name='flickr_photo')
+router.register(r'groups', FlickrGroupViewSet, base_name='flickr_group')
+router.register(r'photos', FlickrPhotoViewSet, base_name='flickr_photo')
 
 urlpatterns = [
     url(r'^', include(router.urls))
