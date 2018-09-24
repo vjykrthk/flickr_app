@@ -1,4 +1,5 @@
 import json
+import logging
 from datetime import datetime
 
 from django.core.management.base import BaseCommand
@@ -15,6 +16,17 @@ FLICKR_BASE_API = "https://api.flickr.com/services/rest/"
 GET_PHOTOS_BY_GROUP_ID_METHOD = "flickr.groups.pools.getPhotos"
 
 GET_PHOTO_INFO_METHOD = "flickr.photos.getInfo"
+
+logger = logging.getLogger('fetch_flickr_images')
+logger.setLevel(logging.DEBUG)
+
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+ch.setFormatter(formatter)
+
+logger.addHandler(ch)
 
 
 def get_datetime_from_epoch(epoch_time_str):
@@ -52,10 +64,12 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         groups = FlickrGroup.objects.all()
         for group in groups:
+            logger.debug('Processing group {}'.format(group.id))
             group_params = self.get_photos_by_group_id_params(group.flickr_id)
             res = requests.get(FLICKR_BASE_API, params=group_params)
             photos = res.json()['photos']['photo']
             for photo in photos:
+                logger.debug('Processing photo {}'.format(photo.get('id')))
                 photos_params = self.get_photos_by_id_params(photo['id'], photo['secret'])
                 res = requests.get(FLICKR_BASE_API, params=photos_params)
                 photo_detail = res.json()['photo']
