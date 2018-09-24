@@ -1,10 +1,11 @@
+import json
 from datetime import datetime
 
 from django.core.management.base import BaseCommand
 import requests
 
 from flickr.models import FlickrGroup, FlickrPhoto, FlickrPhotoDate, FlickrPhotoOwner, FlickrPhotoTag, \
-    FlickrPhotoLocation, FlickrPhotoUrl
+    FlickrPhotoLocation, FlickrPhotoUrl, FlickrPhotoNote
 
 KEY = "d0880d905bedbae00abf20023d6f5e6e"
 SECRET = "7d2a56d63cfb07cf"
@@ -76,13 +77,12 @@ class Command(BaseCommand):
                     isfriend=bool(photo_detail.get('visibility', {}).get('isfriend')),
                     isfamily=bool(photo_detail.get('visibility', {}).get('isfamily')),
                     views=int(photo_detail.get('views')) if 'views' in photo_detail else None,
-                    editability=photo_detail.get('editability', '{}'),
-                    publiceditability=photo_detail.get('publiceditability', '{}'),
-                    usage=photo_detail.get('usage', '{}'),
+                    editability=json.dumps(photo_detail.get('editability', {})),
+                    publiceditability=json.dumps(photo_detail.get('publiceditability', {})),
+                    usage=json.dumps(photo_detail.get('usage', {})),
                     comments=photo_detail.get('comments', {}).get('_content'),
-                    notes=photo_detail.get('notes', '{}'),
-                    people=photo_detail.get('people', '{}'),
-                    geoperms=photo_detail.get('geoperms', '{}'),
+                    people=json.dumps(photo_detail.get('people', {})),
+                    geoperms=json.dumps(photo_detail.get('geoperms', {})),
                     media=photo_detail.get('photo'),
                     flickr_group=group
                 )
@@ -125,16 +125,33 @@ class Command(BaseCommand):
                     flickr_photo_tag.save()
                     flickr_photo_tag.flickr_photos.add(flickr_photo)
 
+                for note in photo_detail.get('notes', {}).get('note', []):
+                    flickr_photo_note = FlickrPhotoNote(
+                        flickr_id=note.get('id'),
+                        photo_id=note.get('id'),
+                        author=note.get('author'),
+                        authorname=note.get('authorname'),
+                        authorrealname=bool(note.get('authorrealname')),
+                        authorispro=bool(note.get('authorispro')),
+                        authorisdeleted=bool(note.get('authorisdeleted')),
+                        dimesions=json.dumps({'x': note.get('x'), 'y': note.get('y'), 'w': note.get('w'), 'h': note.get('h')}),
+                        content=note.get('_content'),
+                        flickr_photo=flickr_photo
+                    )
+                    flickr_photo_note.save()
+
+
+
                 flickr_photo_location = FlickrPhotoLocation(
                     latitude=photo_detail.get('location', {}).get('latitude'),
                     longitude=photo_detail.get('location', {}).get('longitude'),
                     accuracy=photo_detail.get('location', {}).get('accuracy'),
                     context=photo_detail.get('location', {}).get('context'),
                     neighbourhood=photo_detail.get('location', {}).get('neighbourhood'),
-                    locality=photo_detail.get('location', {}).get('locality', '{}'),
-                    county=photo_detail.get('location', {}).get('county', '{}'),
-                    region=photo_detail.get('location', {}).get('region', '{}'),
-                    country=photo_detail.get('location', {}).get('country', '{}'),
+                    locality=json.dumps(photo_detail.get('location', {}).get('locality', {})),
+                    county=json.dumps(photo_detail.get('location', {}).get('county', {})),
+                    region=json.dumps(photo_detail.get('location', {}).get('region', {})),
+                    country=json.dumps(photo_detail.get('location', {}).get('country', {})),
                     place_id=photo_detail.get('location', {}).get('place_id'),
                     woeid=photo_detail.get('location', {}).get('woeid'),
                     flickr_photo=flickr_photo

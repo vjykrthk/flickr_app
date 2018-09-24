@@ -29,11 +29,14 @@ class FlickrPhoto(models.Model):
     publiceditability = models.TextField(null=True, blank=True, default='{}')
     usage = models.TextField(null=True, blank=True, default='{}')
     comments = models.IntegerField(null=True, blank=True)
-    notes = models.TextField(null=True, blank=True, default='{}')
     people = models.TextField(null=True, blank=True, default='{}')
     geoperms = models.TextField(null=True, blank=True, default='{}')
     media = models.CharField(max_length=200, null=True, blank=True)
     flickr_group = models.ForeignKey('FlickrGroup', related_name='flickr_photos', on_delete=models.CASCADE)
+
+    @property
+    def owner(self):
+        return self.flickr_group.owner
 
 
 class FlickrPhotoDate(models.Model):
@@ -56,6 +59,19 @@ class FlickrPhotoOwner(models.Model):
     flickr_photo = models.OneToOneField('FlickrPhoto', on_delete=models.CASCADE)
 
 
+class FlickrPhotoNote(models.Model):
+    flickr_id = models.CharField(max_length=200)
+    photo_id = models.CharField(max_length=100, null=True, blank=True)
+    author = models.CharField(max_length=200, null=True, blank=True)
+    authorname = models.CharField(max_length=200, null=True, blank=True)
+    authorrealname = models.CharField(max_length=200, null=True, blank=True)
+    authorispro = models.NullBooleanField()
+    authorisdeleted = models.NullBooleanField()
+    dimesions = models.TextField(null=True, blank=True, default='{}')
+    content = models.TextField(null=True, blank=True)
+    flickr_photo = models.ForeignKey('FlickrPhoto', related_name='notes', on_delete=models.CASCADE)
+
+
 class FlickrPhotoTag(models.Model):
     flickr_id = models.CharField(max_length=200)
     author = models.CharField(max_length=200, null=True, blank=True)
@@ -63,7 +79,7 @@ class FlickrPhotoTag(models.Model):
     raw = models.CharField(max_length=200, null=True, blank=True)
     content = models.CharField(max_length=200, null=True, blank=True)
     machine_tag = models.IntegerField(null=True, blank=True)
-    flickr_photos = models.ManyToManyField('FlickrPhoto')
+    flickr_photos = models.ManyToManyField('FlickrPhoto', related_name='tags')
 
 
 class FlickrPhotoLocation(models.Model):
