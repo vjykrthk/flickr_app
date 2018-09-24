@@ -134,20 +134,19 @@ class Command(BaseCommand):
                         authorrealname=bool(note.get('authorrealname')),
                         authorispro=bool(note.get('authorispro')),
                         authorisdeleted=bool(note.get('authorisdeleted')),
-                        dimesions=json.dumps({'x': note.get('x'), 'y': note.get('y'), 'w': note.get('w'), 'h': note.get('h')}),
+                        dimesions=json.dumps(
+                            {'x': note.get('x'), 'y': note.get('y'), 'w': note.get('w'), 'h': note.get('h')}),
                         content=note.get('_content'),
                         flickr_photo=flickr_photo
                     )
                     flickr_photo_note.save()
-
-
 
                 flickr_photo_location = FlickrPhotoLocation(
                     latitude=photo_detail.get('location', {}).get('latitude'),
                     longitude=photo_detail.get('location', {}).get('longitude'),
                     accuracy=photo_detail.get('location', {}).get('accuracy'),
                     context=photo_detail.get('location', {}).get('context'),
-                    neighbourhood=photo_detail.get('location', {}).get('neighbourhood'),
+                    neighbourhood=json.dumps(photo_detail.get('location', {}).get('neighbourhood', {})),
                     locality=json.dumps(photo_detail.get('location', {}).get('locality', {})),
                     county=json.dumps(photo_detail.get('location', {}).get('county', {})),
                     region=json.dumps(photo_detail.get('location', {}).get('region', {})),
