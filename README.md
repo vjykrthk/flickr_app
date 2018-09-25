@@ -1,4 +1,4 @@
-# flickr_app
+# Flickr App
 
 ### Installation instruction
 ```
