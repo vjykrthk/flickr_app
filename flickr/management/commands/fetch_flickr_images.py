@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 from datetime import datetime
 
 from django.core.management.base import BaseCommand
@@ -8,8 +9,8 @@ import requests
 from flickr.models import FlickrGroup, FlickrPhoto, FlickrPhotoDate, FlickrPhotoOwner, FlickrPhotoTag, \
     FlickrPhotoLocation, FlickrPhotoUrl, FlickrPhotoNote
 
-KEY = "d0880d905bedbae00abf20023d6f5e6e"
-SECRET = "7d2a56d63cfb07cf"
+KEY = os.environ.get('FLICKR_KEY')
+SECRET = os.environ.get('FLICKR_SECRET')
 
 FLICKR_BASE_API = "https://api.flickr.com/services/rest/"
 
@@ -40,7 +41,8 @@ def flickr_str_dt(str_dt):
 class Command(BaseCommand):
     help = 'Fetching photos from flickr given group_ids'
 
-    def get_photos_by_group_id_params(self, group_id):
+    @staticmethod
+    def get_photos_by_group_id_params(group_id: int) -> dict:
         return {
             "method": GET_PHOTOS_BY_GROUP_ID_METHOD,
             "api_key": KEY,
@@ -48,17 +50,6 @@ class Command(BaseCommand):
             "format": "json",
             "nojsoncallback": 1,
             "per_page": 30
-        }
-
-    @staticmethod
-    def get_photos_by_id_params(photo_id, secret):
-        return {
-            "method": GET_PHOTO_INFO_METHOD,
-            "api_key": KEY,
-            "photo_id": photo_id,
-            "secret": secret,
-            "format": "json",
-            "nojsoncallback": 1
         }
 
     def handle(self, *args, **options):
@@ -70,7 +61,7 @@ class Command(BaseCommand):
             photos = res.json()['photos']['photo']
             for photo in photos:
                 logger.debug('Processing photo {}'.format(photo.get('id')))
-                photos_params = self.get_photos_by_id_params(photo['id'], photo['secret'])
+                photos_params = get_photos_by_id_params(photo['id'], photo['secret'])
                 res = requests.get(FLICKR_BASE_API, params=photos_params)
                 photo_detail = res.json()['photo']
                 flickr_photo = FlickrPhoto(
@@ -178,3 +169,14 @@ class Command(BaseCommand):
                         flickr_photo=flickr_photo
                     )
                     flickr_photo_url.save()
+
+
+def get_photos_by_id_params(photo_id: int, secret: str) -> dict:
+    return {
+        "method": GET_PHOTO_INFO_METHOD,
+        "api_key": KEY,
+        "photo_id": photo_id,
+        "secret": secret,
+        "format": "json",
+        "nojsoncallback": 1
+    }
